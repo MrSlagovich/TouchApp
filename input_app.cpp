@@ -6,6 +6,15 @@
 #include <input/touch_input_manager.h>
 #include <system/debug_log.h>
 
+#define SCREEN_WIDTH 960
+#define SCREEN_HEIGHT 544
+
+bool operator==(const gef::Vector4& lhs, const gef::Vector4& rhs)
+{
+	return (lhs.x() == rhs.x() &&
+		lhs.y() == rhs.y() &&
+		lhs.z() == rhs.z());
+}
 
 InputApp::InputApp(gef::Platform& platform) :
 	Application(platform),
@@ -25,7 +34,14 @@ void InputApp::Init()
 	if (input_manager_ && input_manager_->touch_manager() && (input_manager_->touch_manager()->max_num_panels() > 0))
 		input_manager_->touch_manager()->EnablePanel(0);
 
+	mySprite = gef::Sprite();
+	mySprite.set_position(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0);
+	mySprite.set_height(20);
+	mySprite.set_width(20);
+	mySprite.set_colour(0xff00FF00);
 	InitFont();
+
+	time_left = -1;
 }
 
 void InputApp::CleanUp()
@@ -49,13 +65,19 @@ bool InputApp::Update(float frame_time)
 
 		ProcessTouchInput();
 	}
-
+	if (time_left > 0)
+	{
+		mySprite.set_position(mySprite.position() + intervals);
+		time_left -= frame_time;
+	}
+	
 	return true;
 }
 
 void InputApp::Render()
 {
 	sprite_renderer_->Begin();
+	sprite_renderer_->DrawSprite(mySprite);
 	DrawHUD();
 	sprite_renderer_->End();
 }
@@ -109,10 +131,13 @@ void InputApp::ProcessTouchInput()
 				if (touch->type == gef::TT_NEW)
 				{
 					active_touch_id_ = touch->id;
-
+					
 					// do any processing for a new touch here
 					// we're just going to record the position of the touch
 					touch_position_ = touch->position;
+					mySprite.set_position(touch_position_.x, touch_position_.y, 0.f);
+					time_left = -1;
+					
 				}
 			}
 			else if (active_touch_id_ == touch->id)
@@ -123,6 +148,10 @@ void InputApp::ProcessTouchInput()
 					// update an active touch here
 					// we're just going to record the position of the touch
 					touch_position_ = touch->position;
+
+					
+
+					
 				}
 				else if (touch->type == gef::TT_RELEASED)
 				{
@@ -130,6 +159,13 @@ void InputApp::ProcessTouchInput()
 					// perform any actions that need to happen when a touch is released here
 					// we're not doing anything here apart from resetting the active touch id
 					active_touch_id_ = -1;
+
+					//set vector to x and y of touch position
+					gef::Vector4 destination(touch_position_.x, touch_position_.y, 0);
+					intervals = gef::Vector4(destination.x() - mySprite.position().x(), destination.y() - mySprite.position().y(), 0);
+					intervals /= 60;
+					
+					time_left = 1.f;
 				}
 			}
 		}

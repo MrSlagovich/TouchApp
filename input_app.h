@@ -1,6 +1,6 @@
 #ifndef _INPUT_APP_H
 #define _INPUT_APP_H
-
+#include<graphics/sprite.h>
 #include <system/application.h>
 #include <maths/vector2.h>
 #include <input/touch_input_manager.h>
@@ -37,7 +37,11 @@ private:
 	Int32 active_touch_id_;
 	gef::Vector2 touch_position_;
 
+	float time_left;
 	float fps_;
+	gef::Sprite mySprite;
+	gef::Vector4 intervals;
+
 };
 
 #endif // _INPUT_APP_H
